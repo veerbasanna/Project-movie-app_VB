@@ -13,7 +13,7 @@ spec:
         app: Movie
     spec:
       containers:
-      - name: fullstack
+      - name: Movie
         image: manojkrishnappa/movie:replaceImageTag
         imagePullPolicy: Always
         ports:
@@ -35,10 +35,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: fullstack-service  # Updated name for clarity
+  name: Movie-service  # Updated name for clarity
 spec:
   selector:
-    app: fullstack
+    app: Movie
   ports:
   - protocol: "TCP"
     port: 80
