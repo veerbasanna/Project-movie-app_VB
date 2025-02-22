@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: Movie
+  name: movie  # Changed to lowercase
 spec:
   selector:
     matchLabels:
-      app: Movie
+      app: movie  # Changed to lowercase
   replicas: 1
   template:
     metadata:
       labels:
-        app: Movie
+        app: movie  # Changed to lowercase
     spec:
       containers:
       - name: fullstack
-        image: manojkrishnappa/movie:replaceImageTag
+        image: manojkrishnappa/movie:6
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -35,10 +35,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: Movie-service  # Updated name for clarity
+  name: movie-service  # Changed to lowercase
 spec:
   selector:
-    app: Movie
+    app: movie  # Changed to lowercase
   ports:
   - protocol: "TCP"
     port: 80
