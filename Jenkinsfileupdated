@@ -73,12 +73,15 @@ pipeline {
                         git config user.email "contactmanojmech@gmail.com"
                         git config user.name "ManojKRISHNAPPA"
                         BUILD_NUMBER=${BUILD_NUMBER}
-                        sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" argocd-manifest/deployment.yml
+
+                        # Use sed to replace everything after "manojkrishnappa/movie:" with the BUILD_NUMBER
+                        sed -i "s|image: manojkrishnappa/movie:[^ ]*|image: manojkrishnappa/movie:${BUILD_NUMBER}|g" argocd-manifest/deployment.yml
+
                         git add argocd-manifest/deployment.yml
                         git commit -m "Update deployment image to version ${BUILD_NUMBER}"
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                     '''
-                }
+               }
             }
         }
     }
