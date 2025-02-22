@@ -13,8 +13,8 @@ spec:
         app: Movie
     spec:
       containers:
-      - name: Movie
-        image: manojkrishnappa/movie:replaceImageTag
+      - name: fullstack
+        image: manojkrishnappa/movie:4
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
