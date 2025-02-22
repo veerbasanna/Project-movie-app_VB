@@ -1,0 +1,85 @@
+pipeline {
+    agent any
+    tools {
+        jdk 'java-11'
+        maven 'maven'
+    }
+    environment {
+        SONAR_URL = 'http://54.225.43.62:9000/'  // SonarQube URL
+        DOCKER_IMAGE = "manojkrishnappa/movie:${BUILD_NUMBER}"
+    }
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/ManojKRISHNAPPA/Project-movie-app.git'
+            }
+        }
+        stage('Compile') {
+            steps {
+                sh "mvn compile"
+            }
+        }
+        stage('Build') {
+            steps {
+                sh "mvn clean install"
+            }
+        }
+        stage('Static Code Analysis (SonarQube)') {
+            environment {
+                SONAR_URL = 'http://54.225.43.62:9000' // Update with your SonarQube URL
+            }
+            steps {
+                withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+                    sh "mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}"
+                }
+            }
+        }
+        stage('Build and Tag Docker Image') {
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE} ."
+            }
+        }
+        stage('Containerization') {
+            steps {
+                sh '''
+                    docker stop c1 || true
+                    docker rm c1 || true
+                    docker run -it -d --name c1 -p 9002:8080 ${DOCKER_IMAGE}
+                '''
+            }
+        }
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
+                    }
+                }
+            }
+        }
+        stage('Push Image to Repository') {
+            steps {
+                sh 'docker push ${DOCKER_IMAGE}'
+            }
+        }
+        stage('Update Deployment File') {
+            environment {
+                GIT_REPO_NAME = "Project-movie-app"
+                GIT_USER_NAME = "ManojKRISHNAPPA"
+            }
+            steps {
+                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                        git config user.email "contactmanojmech@gmail.com"
+                        git config user.name "ManojKRISHNAPPA"
+                        BUILD_NUMBER=${BUILD_NUMBER}
+                        sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" argocd-manifest/deployment.yml
+                        git add argocd-manifest/deployment.yml
+                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                    '''
+                }
+            }
+        }
+    }
+}
