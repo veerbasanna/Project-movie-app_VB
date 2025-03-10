@@ -1,0 +1,24 @@
+pipeline{
+    agent any
+
+    stages{
+        stage('git-checkout'){
+            steps{
+                git branch: 'main', url: 'https://github.com/ManojKRISHNAPPA/Project-movie-app.git'
+            }
+        }
+
+        stage('compile'){
+            steps{
+                sh 'mvn compile'
+            }
+        }
+
+        stage('Build'){
+            steps{
+                sh 'mvn clean package'
+            }
+        }
+
+    }
+}
